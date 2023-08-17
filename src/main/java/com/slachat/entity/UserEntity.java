@@ -1,6 +1,5 @@
 package com.slachat.entity;
 
-
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
@@ -19,7 +18,6 @@ public class UserEntity {
     @Column(name = "userName")
     private String username;;
 
-    @JsonProperty( value = "participants", access = JsonProperty.Access.WRITE_ONLY)
     @Column(name = "password")
     private String password;
 
@@ -61,5 +59,15 @@ public class UserEntity {
 
     public Long getId() {
         return id;
+    }
+
+    @Override
+    public String toString() {
+        return "UserEntity{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                ", chats=" + chats +
+                '}';
     }
 }

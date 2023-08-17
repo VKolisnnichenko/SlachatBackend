@@ -1,8 +1,11 @@
 package com.slachat.controller;
 
 import com.slachat.entity.UserEntity;
+import com.slachat.exceptions.InvalidCredentialsException;
+import com.slachat.exceptions.TokenInvalidException;
 import com.slachat.exceptions.UserAlreadyExistException;
 import com.slachat.exceptions.UserNotFoundException;
+import com.slachat.model.LoginDTO;
 import com.slachat.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/users")
 public class UserController {
+
 
     @Autowired
     private UserService userService;
@@ -35,22 +39,35 @@ public class UserController {
     }
 
     @GetMapping("/")
-    public ResponseEntity getUserByUserName(@RequestParam String userName) {
+    public ResponseEntity getUserByUserName(@RequestParam String userName,
+                                            @RequestHeader("Authorization") String authorizationHeader) {
         try {
-            return ResponseEntity.ok(userService.findUserByUserName(userName));
-        } catch (UserNotFoundException e) {
+            return ResponseEntity.ok(userService.findUserByUserName(userName, authorizationHeader));
+        } catch (UserNotFoundException | TokenInvalidException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
+
     @DeleteMapping("{id}")
-    public ResponseEntity deleteUserById(@PathVariable long id){
+    public ResponseEntity deleteUserById(@PathVariable long id) {
         try {
             userService.deleteUser(id);
-            return ResponseEntity.ok("User was deleted with id : "+id);
-        }catch (Exception e){
+            return ResponseEntity.ok("User was deleted with id : " + id);
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PostMapping("/login")
+    public ResponseEntity login(@RequestBody LoginDTO loginRequest) {
+        try {
+            return ResponseEntity.ok(userService.login(loginRequest));
+        } catch (UserNotFoundException | InvalidCredentialsException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+
+    }
+
 
 }
