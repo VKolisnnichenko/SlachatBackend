@@ -1,5 +1,6 @@
 package com.slachat.service;
 
+import com.slachat.entity.TokenResponse;
 import com.slachat.entity.UserEntity;
 import com.slachat.exceptions.InvalidCredentialsException;
 import com.slachat.exceptions.TokenInvalidException;
@@ -59,13 +60,14 @@ public class UserService {
         return id;
     }
 
-    public String login(LoginDTO loginRequest) throws UserNotFoundException, InvalidCredentialsException {
+    public TokenResponse login(LoginDTO loginRequest) throws UserNotFoundException, InvalidCredentialsException {
         String username = loginRequest.getUsername();
         String password = loginRequest.getPassword();
         var user = userRepository.findByUsername(username);
         if (user == null) throw new UserNotFoundException("User not found with userName " + username);
         if (validateCredentials(user, password)) {
-            return generateAuthToken(user.getId(), username);
+            String token = generateAuthToken(user.getId(), username);
+            return new TokenResponse(token);
         } else {
             throw new InvalidCredentialsException("Invalid credentials");
         }
@@ -101,5 +103,30 @@ public class UserService {
                 .signWith(SECRET_KEY) // Use the same secret key for signing
                 .compact();
     }
+
+    public UserModel getUserProfile(String authorizationHeader) throws TokenInvalidException, UserNotFoundException {
+        String token = authorizationHeader.substring("Bearer ".length());
+        if (validateAndDecodeToken(token)) {
+            Claims claims = extractTokenClaims(token);
+            Long userId = claims.get("userId", Long.class);
+            try {
+                return findUserById(userId);
+            } catch (UserNotFoundException e) {
+                throw new UserNotFoundException(e.getMessage());
+            }
+        } else {
+            throw new TokenInvalidException("Token invalid");
+        }
+    }
+
+
+    private Claims extractTokenClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(SECRET_KEY)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
 
 }

@@ -1,13 +1,16 @@
 package com.slachat.controller;
 
+import com.slachat.entity.ErrorResponse;
 import com.slachat.entity.UserEntity;
 import com.slachat.exceptions.InvalidCredentialsException;
 import com.slachat.exceptions.TokenInvalidException;
 import com.slachat.exceptions.UserAlreadyExistException;
 import com.slachat.exceptions.UserNotFoundException;
 import com.slachat.model.LoginDTO;
+import com.slachat.model.UserModel;
 import com.slachat.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -64,10 +67,19 @@ public class UserController {
         try {
             return ResponseEntity.ok(userService.login(loginRequest));
         } catch (UserNotFoundException | InvalidCredentialsException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
         }
-
     }
 
-
+    @GetMapping("/profile")
+    public ResponseEntity getUserProfile(@RequestHeader("Authorization") String authorizationHeader) {
+        try {
+            UserModel userProfile = userService.getUserProfile(authorizationHeader);
+            return ResponseEntity.ok(userProfile);
+        } catch (TokenInvalidException | UserNotFoundException e) {
+            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
 }
