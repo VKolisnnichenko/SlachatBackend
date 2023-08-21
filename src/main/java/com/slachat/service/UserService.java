@@ -1,6 +1,8 @@
 package com.slachat.service;
 
+import com.slachat.entity.ChatEntity;
 import com.slachat.entity.TokenResponse;
+import com.slachat.entity.UserChatDTO;
 import com.slachat.entity.UserEntity;
 import com.slachat.exceptions.InvalidCredentialsException;
 import com.slachat.exceptions.TokenInvalidException;
@@ -18,7 +20,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -113,6 +117,37 @@ public class UserService {
                 return findUserById(userId);
             } catch (UserNotFoundException e) {
                 throw new UserNotFoundException(e.getMessage());
+            }
+        } else {
+            throw new TokenInvalidException("Token invalid");
+        }
+    }
+
+    public List<UserChatDTO> getUserChats(String authorizationHeader) throws TokenInvalidException, UserNotFoundException {
+        String token = authorizationHeader.substring("Bearer ".length());
+        if (validateAndDecodeToken(token)) {
+            Claims claims = extractTokenClaims(token);
+            Long userId = claims.get("userId", Long.class);
+            Optional<UserEntity> user = userRepository.findById(userId);
+            if (user.isPresent()) {
+                // Create a list of UserChatDTO objects
+                List<UserChatDTO> userChats = new ArrayList<>();
+                for (ChatEntity chat : user.get().getChats()) {
+
+                    UserChatDTO userChatDTO = new UserChatDTO();
+                    userChatDTO.setChatId(chat.getId());
+                    for (UserEntity participant : chat.getParticipants()) {
+                        if (!participant.getId().equals(userId)) {
+                            userChatDTO.setUser(UserModel.mapUser(participant));
+                            break;
+                        }
+                    }
+                    userChats.add(userChatDTO);
+                }
+
+                return userChats;
+            } else {
+                throw new UserNotFoundException("User not found with id " + userId);
             }
         } else {
             throw new TokenInvalidException("Token invalid");

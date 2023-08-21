@@ -9,17 +9,13 @@ public class UserModel {
     private Long id;
     private String username;
 
-    private List<ChatEntity> chats;
-
-
     public Long getId() {
         return id;
     }
 
-    public UserModel(Long id, String username, List<ChatEntity> chats) {
+    public UserModel(Long id, String username) {
         this.id = id;
         this.username = username;
-        this.chats = chats;
     }
 
     public void setId(Long id) {
@@ -34,16 +30,9 @@ public class UserModel {
         this.username = username;
     }
 
-    public void setChats(List<ChatEntity> chats) {
-        this.chats = chats;
-    }
 
     public static UserModel mapUser(UserEntity userEntity) {
-        return new UserModel(userEntity.getId(), userEntity.getUserName(), userEntity.getChats());
-    }
-
-    public List<ChatEntity> getChats() {
-        return chats;
+        return new UserModel(userEntity.getId(), userEntity.getUserName());
     }
 }
 

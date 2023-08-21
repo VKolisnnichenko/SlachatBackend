@@ -27,6 +27,11 @@ public class ChatService {
         return chatRepository.save(chat);
     }
 
+    public Long deleteChat(Long id) {
+        chatRepository.deleteById(id);
+        return id;
+    }
+
     public ChatEntity getChatById(Long id) throws ChatNotFoundException {
         var chat = chatRepository.findById(id);
         if (chat.isPresent()) {
